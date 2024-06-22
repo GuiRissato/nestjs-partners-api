@@ -25,16 +25,7 @@
       "compilerOptions": {
         "tsConfigPath": "apps/partner1/tsconfig.app.json"
       }
-    },
-    "partner2": {
-      "type": "application",
-      "root": "apps/partner2",
-      "entryFile": "main",
-      "sourceRoot": "apps/partner2/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/partner2/tsconfig.app.json"
-      }
-    }
+    }    
   },
   "monorepo": true,
   "root": "apps/partner1"
