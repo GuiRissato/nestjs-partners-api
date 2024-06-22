@@ -1,56 +1,46 @@
-###
 GET http://localhost:3001/eventos
-###
 
-# @name createEvent
+
+###
+# @name criarEvento
 POST http://localhost:3001/eventos
 Content-Type: application/json
 
 {
-    "nome": "new event",
-    "descricao": "new event description",
-    "data": "2024-06-17T00:00:00.000Z",
-    "preco": 100
-   
+  "nome": "event 1",
+  "descricao": "event 1 description",
+  "data": "2024-06-02T10:23:14",
+  "preco": 100.10
 }
+
 ###
 
-@eventId = {{createEvent.response.body.id}}
-GET http://localhost:3001/eventos
+@eventoId = {{ criarEvento.response.body.id }}
+
 ###
-GET http://localhost:3001/eventos/{{eventId}}
+GET http://localhost:3001/eventos/{{eventoId}}/lugares
+
 ###
-PATCH http://localhost:3001/eventos/{{eventId}}
+# @name criarLugar
+POST http://localhost:3001/eventos/{{eventoId}}/lugares
 Content-Type: application/json
 
 {
-    "nome": "Sherek",
-    "data": "2024-06-17T00:00:00.000Z",
-    "preco": 200
-   
+  "nome": "spot 2"
 }
-###
-DELETE  http://localhost:3001/eventos/{{eventId}}
 
 ###
-GET http://localhost:3001/eventos/{{eventId}}/lugares
-###
-# @name createSpot
-POST http://localhost:3001/eventos/{{eventId}}/lugares
+
+@lugarNome = {{ criarLugar.response.body.name }}
+
+### Reserve spots
+
+POST http://localhost:3001/eventos/{{eventoId}}/reservar
 Content-Type: application/json
+X-Api-Token: 000
 
 {
-  "nome": "A4" 
-}
-###
-@spotName = {{ createSpot.response.body.name }}
-###
-POST http://localhost:3001/eventos/{{eventId}}/reserva
-Content-Type: application/json
-X-Api-Token: 1234
-
-{
-  "lugares": ["{{ spotName }}"],
-  "tipo_ingresso": "full",
-  "email" : "test@test.com"
+  "lugares": ["{{lugarNome}}"],
+  "tipo_ingresso": "inteira",
+  "email": "user1@test.com"
 }

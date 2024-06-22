@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { LugaresController } from './spots.controller';
 import { SpotsCoreModule } from '@app/core/spots/spots-core.module';
+import { LugaresController } from './lugares.controller';
 
 @Module({
   imports: [SpotsCoreModule],

@@ -9,7 +9,6 @@ export class AuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
     const token = request.headers['x-api-token'];
-
     return token === this.configService.get('API_TOKEN');
   }
 }

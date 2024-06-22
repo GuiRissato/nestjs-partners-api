@@ -4,7 +4,7 @@ CREATE TABLE `Ticket` (
     `email` VARCHAR(191) NOT NULL,
     `ticketKind` ENUM('full', 'half') NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `spotId` VARCHAR(191) NOT NULL,
 
     UNIQUE INDEX `Ticket_spotId_key`(`spotId`),
@@ -16,9 +16,9 @@ CREATE TABLE `ReservationHistory` (
     `id` VARCHAR(191) NOT NULL,
     `email` VARCHAR(191) NOT NULL,
     `ticketKind` ENUM('full', 'half') NOT NULL,
-    `statis` ENUM('reserved', 'canceled') NOT NULL,
+    `status` ENUM('reserved', 'canceled') NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `spotId` VARCHAR(191) NOT NULL,
 
     PRIMARY KEY (`id`)

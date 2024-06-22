@@ -1,47 +1,51 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-
 import { ReserveSpotDto } from './dto/reserve-spot.dto';
-import { SpotStatus, TicketStatus, Prisma } from '@prisma/client';
+import { Prisma, SpotStatus, TicketStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class EventsService {
-  constructor(private PrismaService: PrismaService) {}
+  constructor(private prismaService: PrismaService) {}
 
   create(createEventDto: CreateEventDto) {
-    return this.PrismaService.event.create({
-      data: createEventDto,
+    return this.prismaService.event.create({
+      data: {
+        ...createEventDto,
+        date: new Date(createEventDto.date),
+      },
     });
   }
 
   findAll() {
-    return this.PrismaService.event.findMany();
+    return this.prismaService.event.findMany();
   }
 
   findOne(id: string) {
-    return this.PrismaService.event.findUnique({
-      where: { id: id },
+    return this.prismaService.event.findUnique({
+      where: { id },
     });
   }
 
   update(id: string, updateEventDto: UpdateEventDto) {
-    return this.PrismaService.event.update({
-      data: { ...updateEventDto },
+    return this.prismaService.event.update({
+      data: {
+        ...updateEventDto,
+        date: new Date(updateEventDto.date),
+      },
       where: { id },
     });
   }
 
   remove(id: string) {
-    return this.PrismaService.event.delete({
+    return this.prismaService.event.delete({
       where: { id },
     });
   }
 
-  async reserveSpots(dto: ReserveSpotDto & { eventId: string }) {
-    const spots = await this.PrismaService.spot.findMany({
+  async reserveSpot(dto: ReserveSpotDto & { eventId: string }) {
+    const spots = await this.prismaService.spot.findMany({
       where: {
         eventId: dto.eventId,
         name: {
@@ -49,7 +53,6 @@ export class EventsService {
         },
       },
     });
-
     if (spots.length !== dto.spots.length) {
       const foundSpotsName = spots.map((spot) => spot.name);
       const notFoundSpotsName = dto.spots.filter(
@@ -58,9 +61,8 @@ export class EventsService {
       throw new Error(`Spots ${notFoundSpotsName.join(', ')} not found`);
     }
 
-    // modo transação
     try {
-      const tickets = await this.PrismaService.$transaction(
+      const tickets = await this.prismaService.$transaction(
         async (prisma) => {
           await prisma.reservationHistory.createMany({
             data: spots.map((spot) => ({
@@ -82,38 +84,35 @@ export class EventsService {
             },
           });
 
-          // Await the Promise.all to get the created tickets
-          const createdTickets = await Promise.all(
-            spots.map((spot) => {
-              return prisma.ticket.create({
+          const tickets = await Promise.all(
+            spots.map((spot) =>
+              prisma.ticket.create({
                 data: {
                   spotId: spot.id,
                   ticketKind: dto.ticket_kind,
                   email: dto.email,
                 },
-              });
-            }),
+                include: {
+                  Spot: true,
+                },
+              }),
+            ),
           );
 
-          return createdTickets; // Return the created tickets
+          return tickets;
         },
-        { isolationLevel: Prisma.TransactionIsolationLevel.ReadUncommitted },
-        // Só sera possivel ler registros ja commitados no banco de dados
+        { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted },
       );
-
       return tickets;
-    } catch (error) {
-      console.log('error on transaction reserve spot', error.message);
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        switch (error.code) {
-          case 'P2002':
-            throw new Error('Spot already reserved');
-          case 'P2034':
-            throw new Error('Spot transaction conflict');
-          default:
-            throw new Error('error unkown');
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        switch (e.code) {
+          case 'P2002': // unique constraint violation
+          case 'P2034': // transaction conflict
+            throw new Error('Some spots are already reserved');
         }
       }
+      throw e;
     }
   }
 }

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { CreateSpotDto } from './dto/create-spot.dto';
 import { UpdateSpotDto } from './dto/update-spot.dto';
-import { SpotStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { SpotStatus } from '@prisma/client';
 
 @Injectable()
 export class SpotsService {
@@ -10,8 +10,11 @@ export class SpotsService {
 
   async create(createSpotDto: CreateSpotDto & { eventId: string }) {
     const event = await this.prismaService.event.findFirst({
-      where: { id: createSpotDto.eventId },
+      where: {
+        id: createSpotDto.eventId,
+      },
     });
+
     if (!event) {
       throw new Error('Event not found');
     }
@@ -33,10 +36,10 @@ export class SpotsService {
   }
 
   findOne(eventId: string, spotId: string) {
-    return this.prismaService.spot.findUnique({
+    return this.prismaService.spot.findFirst({
       where: {
         id: spotId,
-        eventId: eventId,
+        eventId,
       },
     });
   }
@@ -47,7 +50,7 @@ export class SpotsService {
         id: spotId,
         eventId,
       },
-      data: { ...updateSpotDto },
+      data: updateSpotDto,
     });
   }
 

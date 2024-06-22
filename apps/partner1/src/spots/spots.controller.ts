@@ -17,11 +17,11 @@ export class SpotsController {
 
   @Post()
   create(
-    @Body() createSpotDto: CreateSpotRequest,
+    @Body() createSpotRequest: CreateSpotRequest,
     @Param('eventId') eventId: string,
   ) {
     return this.spotsService.create({
-      ...createSpotDto,
+      ...createSpotRequest,
       eventId,
     });
   }

@@ -14,14 +14,15 @@ import { CreateEventRequest } from './request/create-event.request';
 import { UpdateEventRequest } from './request/update-event.request';
 import { ReserveSpotRequest } from './request/reserve-spot.request';
 import { AuthGuard } from '@app/core/auth/auth.guard';
+import { ReserveSpotResponse } from './response/reserve-spot.response';
 
 @Controller('events')
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Post()
-  create(@Body() createEventDto: CreateEventRequest) {
-    return this.eventsService.create(createEventDto);
+  create(@Body() createEventRequest: CreateEventRequest) {
+    return this.eventsService.create(createEventRequest);
   }
 
   @Get()
@@ -50,10 +51,14 @@ export class EventsController {
 
   @UseGuards(AuthGuard)
   @Post(':id/reserve')
-  reserveSpots(
-    @Body() reserveRquest: ReserveSpotRequest,
+  async reserveSpots(
+    @Body() reserveRequest: ReserveSpotRequest,
     @Param('id') eventId: string,
   ) {
-    return this.eventsService.reserveSpots({ ...reserveRquest, eventId });
+    const tickets = await this.eventsService.reserveSpot({
+      ...reserveRequest,
+      eventId,
+    });
+    return new ReserveSpotResponse(tickets);
   }
 }
